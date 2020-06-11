@@ -1,4 +1,5 @@
 import sys
+import sqlite3
 
 try:
     import Tkinter as tk
@@ -13,38 +14,23 @@ except ImportError:
     py3 = True
 
 
+
 def vp_start_gui():
-    '''Starting point when module is the main routine.'''
     global val, w, root
     root = tk.Tk()
     top = Toplevel1 (root)
     root.mainloop()
 
-w = None
-def create_Toplevel1(rt, *args, **kwargs):
-    '''Starting point when module is imported by another module.
-       Correct form of call: 'create_Toplevel1(root, *args, **kwargs)' .'''
-    global w, w_win, root
-    #rt = root
-    root = rt
-    w = tk.Toplevel (root)
-    top = Toplevel1 (w)
-    return (w, top)
-
-def destroy_Toplevel1():
-    global w
-    w.destroy()
-    w = None
-
 class Toplevel1:
     def __init__(self, top=None):
-        '''This class configures and populates the toplevel window.
-           top is the toplevel containing window.'''
-        _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
-        _fgcolor = '#000000'  # X11 color: 'black'
-        _compcolor = '#d9d9d9' # X11 color: 'gray85'
-        _ana1color = '#d9d9d9' # X11 color: 'gray85'
-        _ana2color = '#ececec' # Closest X11 color: 'gray92'
+
+        self.conn = sqlite3.connect('subd.db')
+        
+        _bgcolor = '#d9d9d9' 
+        _fgcolor = '#000000'  
+        _compcolor = '#d9d9d9' 
+        _ana1color = '#d9d9d9' 
+        _ana2color = '#ececec' 
 
         top.geometry("1321x738+428+152")
         top.minsize(120, 1)
@@ -55,7 +41,7 @@ class Toplevel1:
         top.configure(highlightbackground="#d9d9d9")
         top.configure(highlightcolor="black")
 
-        self.create_entry = tk.Button(top)
+        self.create_entry = tk.Button(top,command=self.create_table)
         self.create_entry.place(relx=0.031, rely=0.027, height=24, width=47)
         self.create_entry.configure(activebackground="#ececec")
         self.create_entry.configure(activeforeground="#000000")
@@ -428,18 +414,33 @@ class Toplevel1:
         self.print_DB_message.configure(text='''PRINT DATABASE''')
         self.print_DB_message.configure(width=610)
 
-    @staticmethod
-    def popup1(event, *args, **kwargs):
-        Popupmenu1 = tk.Menu(root, tearoff=0)
-        Popupmenu1.configure(activebackground="#f9f9f9")
-        Popupmenu1.configure(activeborderwidth="1")
-        Popupmenu1.configure(activeforeground="black")
-        Popupmenu1.configure(background="#d9d9d9")
-        Popupmenu1.configure(borderwidth="1")
-        Popupmenu1.configure(disabledforeground="#a3a3a3")
-        Popupmenu1.configure(font="{Segoe UI} 9")
-        Popupmenu1.configure(foreground="black")
-        Popupmenu1.post(event.x_root, event.y_root)
+    def create_table(self):
+        table_forest = """ CREATE TABLE forests(
+                                        forest_id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                        len REAL NOT NULL,
+                                        lat REAL NOT NULL,
+                                        country_name TEXT,
+                                        forest_type_id INTEGER,
+                                        FOREIGN KEY(forest_type_id) REFERENCES forest_types(ID),
+                                        FOREIGN KEY(country_name) REFERENCES countries(name)
+                                    ); """
+
+        table_forest_types = """ CREATE TABLE forest_types(
+                                ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                                type TEXT,
+                                natural BOOLEAN,
+                                conserved BOOLEAN
+                            ); """
+        table_countries = """ CREATE TABLE countries(
+                            name TEXT PRIMARY KEY UNIQUE NOT NULL,
+                            climate TEXT
+                            );"""
+        
+        c = self.conn.cursor()
+        c.execute(table_forest_types)
+        c.execute(table_countries)
+        c.execute(table_forest)
+    
 
 if __name__ == '__main__':
     vp_start_gui()
